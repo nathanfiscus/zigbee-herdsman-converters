@@ -33,6 +33,7 @@ const ledEffects = {
     'chase': 5,
     'open_close': 6,
     'small_to_big': 7,
+    'aurora': 8,
     'clear_effect': 255,
 };
 
@@ -610,16 +611,26 @@ const ATTRIBUTES = {
         description:
       'Intesity of LED strip when off. 101 = Syncronized with default all LED strip intensity parameter.',
     },
-    doubleTapUpEvent: {
+    doubleTapUpForFullBrightness: {
         ID: 53,
         dataType: BOOLEAN,
         min: 0,
         max: 1,
         description: 'Result of a double tap on the up button.',
         values: {
-            'Button Press Event Only': 0,
-            'Button Press Event + Set Load to 100%': 1,
+        'Button Press Event Only': 0,
+        'Button Press Event + Set Load to 100%': 1,
         },
+        displayType: 'enum',
+    },
+    relayClick: {
+        ID: 261,
+        dataType: BOOLEAN,
+        min: 0,
+        max: 1,
+        description: "Audible Click in On/Off mode.",
+        values: { "Enabled (Default)": 1, Disabled: 0 },
+        displayType: "enum",
     },
 };
 
@@ -1051,6 +1062,7 @@ const exposesList = [
                     'pulse',
                     'open_close',
                     'small_to_big',
+                    'aurora',
                     'clear_effect',
                 ])
                 .withDescription('Animation Effect to use for the LEDs'),
@@ -1125,8 +1137,8 @@ const exposesList = [
                 .withValueMax(255)
                 .withDescription(
                     '1-60 is in seconds calculated 61-120 is in minutes calculated by(value-60) ' +
-            'Example a value of 65 would be 65-60 = 5 minutes - 120-254 Is in hours calculated by(value-120) ' +
-            ' Example a value of 132 would be 132-120 would be 12 hours. - 255 Indefinitely',
+                    'Example a value of 65 would be 65-60 = 5 minutes - 120-254 Is in hours calculated by(value-120) ' +
+                    ' Example a value of 132 would be 132-120 would be 12 hours. - 255 Indefinitely',
                 ),
         ),
 ];
@@ -1144,32 +1156,32 @@ const toZigbee = [
 Object.keys(ATTRIBUTES).forEach((key) => {
     if (ATTRIBUTES[key].displayType === 'enum') {
         const enumE = exposes
-            .enum(
-                key,
-                ATTRIBUTES[key].readOnly ? ea.GET : ea.ALL,
-                Object.keys(ATTRIBUTES[key].values),
-            )
-            .withDescription(ATTRIBUTES[key].description);
+          .enum(
+            key,
+            ATTRIBUTES[key].readOnly ? ea.STATE_GET : ea.ALL,
+            Object.keys(ATTRIBUTES[key].values)
+          )
+          .withDescription(ATTRIBUTES[key].description);
         exposesList.push(enumE);
     } else if (
         ATTRIBUTES[key].displayType === 'binary' ||
-    ATTRIBUTES[key].displayType === 'switch'
+        ATTRIBUTES[key].displayType === 'switch'
     ) {
         exposesList.push(
-            exposes
-                .binary(
-                    key,
-                    ATTRIBUTES[key].readOnly ? ea.GET : ea.ALL,
-                    ATTRIBUTES[key].values.Enabled,
-                    ATTRIBUTES[key].values.Disabled,
-                )
-                .withDescription(ATTRIBUTES[key].description),
+          exposes
+            .binary(
+              key,
+              ATTRIBUTES[key].readOnly ? ea.STATE_GET : ea.ALL,
+              ATTRIBUTES[key].values.Enabled,
+              ATTRIBUTES[key].values.Disabled
+            )
+            .withDescription(ATTRIBUTES[key].description)
         );
     } else {
         const numeric = exposes
-            .numeric(key, ATTRIBUTES[key].readOnly ? ea.GET : ea.ALL)
-            .withValueMin(ATTRIBUTES[key].min)
-            .withValueMax(ATTRIBUTES[key].max);
+          .numeric(key, ATTRIBUTES[key].readOnly ? ea.STATE_GET : ea.ALL)
+          .withValueMin(ATTRIBUTES[key].min)
+          .withValueMax(ATTRIBUTES[key].max);
 
         if (ATTRIBUTES[key].values) {
             Object.keys(ATTRIBUTES[key].values).forEach((value) => {
@@ -1189,7 +1201,7 @@ module.exports = [
         zigbeeModel: ['VZM31-SN'],
         model: 'VZM31-SN',
         vendor: 'Inovelli',
-        description: 'Inovelli 2-in-1 switch + dimmer',
+        description: 'Inovelli 2-in-1 Switch + Dimmer',
         exposes: exposesList,
         toZigbee: toZigbee,
         fromZigbee: [
@@ -1206,20 +1218,26 @@ module.exports = [
         configure: async (device, coordinatorEndpoint, logger) => {
             const endpoint = device.getEndpoint(1);
             await reporting.bind(endpoint, coordinatorEndpoint, [
-                'genOnOff',
-                'genLevelCtrl',
+                "seMetering",
+                "haElectricalMeasurement",
             ]);
-
             // Bind for Button Event Reporting
             const endpoint2 = device.getEndpoint(2);
             await reporting.bind(endpoint2, coordinatorEndpoint, [
-                'manuSpecificInovelliVZM31SN',
+                "manuSpecificInovelliVZM31SN",
             ]);
+            await endpoint.read("haElectricalMeasurement", [
+                "acPowerMultiplier",
+                "acPowerDivisor",
+            ]);
+            await reporting.readMeteringMultiplierDivisor(endpoint);
 
-            await reporting.readEletricalMeasurementMultiplierDivisors(endpoint);
-            await reporting.readMeteringMultiplierDivisors(endpoint);
-            await reporting.activePower(endpoint);
-            await reporting.currentSummDelivered(endpoint);
+            await reporting.activePower(endpoint, { min: 1, max: 3600, change: 1 });
+            await reporting.currentSummDelivered(endpoint, {
+                min: 1,
+                max: 3600,
+                change: 0,
+            });
         },
     },
 ];
