@@ -277,9 +277,9 @@ const ATTRIBUTES = {
         ID: 22,
         dataType: UINT8,
         displayType: 'enum',
-        values: {'Single Pole': 0, '3-Way Dumb Switch': 1, '3-Way Aux Switch': 2},
+        values: {'Single Pole': 0, '3-Way Dumb Switch': 1, '3-Way Aux Switch': 2, 'Single Full Wave (On/Off mode Only)': 3},
         min: 0,
-        max: 2,
+        max: 3,
         description: 'Set the switch configuration.',
     },
     buttonDelay: {
@@ -287,8 +287,6 @@ const ATTRIBUTES = {
         dataType: UINT8,
         values: {
             '0ms': 0,
-            '100ms': 1,
-            '200ms': 2,
             '300ms': 3,
             '400ms': 4,
             '500ms': 5,
@@ -632,32 +630,33 @@ const ATTRIBUTES = {
         dataType: BOOLEAN,
         min: 0,
         max: 1,
-        description: 'Result of a double tap on the up button.',
+        description: 'Enable or Disable full brightness on double-tap up.',
         values: {
-            'Button Press Event Only': 0,
-            'Button Press Event + Set Load to 100%': 1,
+            'Disabled (default)': 0,
+            'Enabled': 1,
         },
         displayType: 'enum',
     },
+    doubleTapDownForMinimumBrightness: {
+        ID: 54,
+        dataType: BOOLEAN,
+        min: 0,
+        max: 1,
+        description: 'Enable or Disable minimum brightness on double-tap down.',
+        values: {
+            'Disabled (default)': 0,
+            'Enabled': 1,
+        },
+        displayType: 'enum',
+    },
+
     relayClick: {
         ID: 261,
         dataType: BOOLEAN,
         min: 0,
         max: 1,
-        description:
-      'In neutral on/off setups, the default is to have a clicking sound to notify you that the relay ' +
-      'is open or closed. You may disable this sound by creating a, “simulated” on/off where the switch ' +
-      'only will turn onto 100 or off to 0.',
-        values: {'Disabled (Click Sound On)': 0, 'Enabled (Click Sound Off)': 1},
-        displayType: 'enum',
-    },
-    doubleTapClearNotifications: {
-        ID: 262,
-        dataType: BOOLEAN,
-        min: 0,
-        max: 1,
-        description: 'Double-Tap the Config button to clear notifications.',
-        values: {'Enabled (Default)': 0, 'Disabled': 1},
+        description: 'Audible Click in On/Off mode.',
+        values: {'Enabled (Default)': 1, 'Disabled': 0},
         displayType: 'enum',
     },
 };
@@ -1303,13 +1302,6 @@ module.exports = [
                 'acPowerDivisor',
             ]);
             await reporting.readMeteringMultiplierDivisor(endpoint);
-
-            await reporting.activePower(endpoint, {min: 15, max: 3600, change: 1});
-            await reporting.currentSummDelivered(endpoint, {
-                min: 15,
-                max: 3600,
-                change: 0,
-            });
         },
     },
 ];
