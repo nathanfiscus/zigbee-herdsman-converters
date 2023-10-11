@@ -842,7 +842,7 @@ const VZM35_ATTRIBUTES : {[s: string]: Attribute} = {
         max: 135,
         description: 'Identification value in Non-nuetral, medium gear, aux switch',
     },
-    nonNeutrakAuxLowGear: {
+    nonNeutralAuxLowGear: {
         ID: 31,
         dataType: UINT8,
         min: 42,
