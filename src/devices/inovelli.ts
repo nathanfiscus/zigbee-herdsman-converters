@@ -874,7 +874,7 @@ const tzLocal = {
                 },
             };
 
-            await entity.write('manuSpecificInovelliVZM31SN', payload, {
+            await entity.write('manuSpecificInovelli', payload, {
                 manufacturerCode: INOVELLI,
             });
 
@@ -887,7 +887,7 @@ const tzLocal = {
             };
         },
         convertGet: async (entity, key, meta) => {
-            const value = await entity.read('manuSpecificInovelliVZM31SN', [key], {
+            const value = await entity.read('manuSpecificInovelli', [key], {
                 manufacturerCode: INOVELLI,
             });
 
@@ -906,7 +906,7 @@ const tzLocal = {
     inovelli_parameters_readOnly: (ATTRIBUTES: {[s: string]: Attribute})=>({
         key: Object.keys(ATTRIBUTES).filter((a) => ATTRIBUTES[a].readOnly),
         convertGet: async (entity, key, meta) => {
-            const value = await entity.read('manuSpecificInovelliVZM31SN', [key], {
+            const value = await entity.read('manuSpecificInovelli', [key], {
                 manufacturerCode: INOVELLI,
             });
 
@@ -927,7 +927,7 @@ const tzLocal = {
         key: ['led_effect'],
         convertSet: async (entity, key, values, meta) => {
             await entity.command(
-                'manuSpecificInovelliVZM31SN',
+                'manuSpecificInovelli',
                 'ledEffect',
                 {
                     // @ts-expect-error
@@ -948,7 +948,7 @@ const tzLocal = {
         key: ['individual_led_effect'],
         convertSet: async (entity, key, values, meta) => {
             await entity.command(
-                'manuSpecificInovelliVZM31SN',
+                'manuSpecificInovelli',
                 'individualLedEffect',
                 {
                     // @ts-expect-error
@@ -1092,7 +1092,7 @@ const tzLocal = {
                             utils.getOptions(meta.mapped, entity),
                         );
                         const defaultTransitionTime = await entity.read(
-                            'manuSpecificInovelliVZM31SN',
+                            'manuSpecificInovelli',
                             ['rampRateOffToOnRemote'],
                         );
                         return {
@@ -1148,7 +1148,7 @@ const tzLocal = {
                 );
 
                 const defaultTransitionTime = await entity.read(
-                    'manuSpecificInovelliVZM31SN',
+                    'manuSpecificInovelli',
                     ['rampRateOnToOffRemote'],
                 );
 
@@ -1295,7 +1295,7 @@ const inovelliOnOffConvertSet = async (entity: Zh.Endpoint | Zh.Group, key: stri
 
 const fzLocal = {
     inovelli: {
-        cluster: 'manuSpecificInovelliVZM31SN',
+        cluster: 'manuSpecificInovelli',
         type: ['raw', 'readResponse', 'commandQueryNextImageRequest'],
         convert: (model, msg, publish, options, meta) => {
             if (msg.type === 'raw' && msg.endpoint.ID == 2 && msg.data[4] === 0x00) {
@@ -1314,9 +1314,7 @@ const fzLocal = {
                 // # 2 - up button
                 // # 3 - config button
 
-                // @ts-expect-error
                 const button = buttonLookup[msg.data[5]];
-                // @ts-expect-error
                 const action = clickLookup[msg.data[6]];
                 return {action: `${button}_${action}`};
             } else if (msg.type === 'readResponse') {
@@ -1672,7 +1670,7 @@ const definitions: Definition[] = [
             // Bind for Button Event Reporting
             const endpoint2 = device.getEndpoint(2);
             await reporting.bind(endpoint2, coordinatorEndpoint, [
-                'manuSpecificInovelliVZM31SN',
+                'manuSpecificInovelli',
             ]);
             await endpoint.read('haElectricalMeasurement', [
                 'acPowerMultiplier',
@@ -1717,7 +1715,7 @@ const definitions: Definition[] = [
             // Bind for Button Event Reporting
             const endpoint2 = device.getEndpoint(2);
             await reporting.bind(endpoint2, coordinatorEndpoint, [
-                'manuSpecificInovelliVZM31SN',
+                'manuSpecificInovelli',
             ]);
         },
     },
