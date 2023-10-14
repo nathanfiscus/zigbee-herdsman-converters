@@ -1298,8 +1298,7 @@ const fzLocal = {
         cluster: 'manuSpecificInovelliVZM31SN',
         type: ['raw', 'readResponse', 'commandQueryNextImageRequest'],
         convert: (model, msg, publish, options, meta) => {
-            const command = msg.data[4]; // maybe 0
-            if (msg.endpoint.ID == 2 && command === 0x00) {
+            if (msg.type === 'raw' && msg.endpoint.ID == 2 && msg.data[4] === 0x00) {
                 // Scene Event
                 // # byte 1 - msg.data[6]
                 // # 0 - pressed
@@ -1315,9 +1314,13 @@ const fzLocal = {
                 // # 2 - up button
                 // # 3 - config button
 
+                // @ts-expect-error
                 const button = buttonLookup[msg.data[5]];
+                // @ts-expect-error
                 const action = clickLookup[msg.data[6]];
                 return {action: `${button}_${action}`};
+            } else if (msg.type === 'readResponse') {
+                return msg.data;
             }
         },
     } as Fz.Converter,
