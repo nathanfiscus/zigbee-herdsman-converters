@@ -314,31 +314,6 @@ const COMMON_ATTRIBUTES: {[s: string]: Attribute} = {
         min: 0,
         max: 11,
     },
-    activePowerReports: {
-        ID: 18,
-        dataType: UINT8,
-        min: 0,
-        max: 100,
-        description:
-      'Percent power level change that will result in a new power report being sent. 0 = Disabled',
-    },
-    periodicPowerAndEnergyReports: {
-        ID: 19,
-        min: 0,
-        max: 32767,
-        dataType: UINT16,
-        description:
-      'Time period between consecutive power & energy reports being sent (in seconds). The timer is reset after each report is sent.',
-    },
-    activeEnergyReports: {
-        ID: 20,
-        dataType: UINT16,
-        min: 0,
-        max: 32767,
-        description:
-      'Energy reports Energy level change which will result in sending a new energy report.' +
-      '0 = disabled, 1-32767 = 0.01kWh-327.67kWh. Default setting: 10 (0.1 kWh)',
-    },
     powerType: {
         ID: 21,
         dataType: BOOLEAN,
@@ -792,6 +767,31 @@ const COMMON_ATTRIBUTES: {[s: string]: Attribute} = {
 
 const VZM31_ATTRIBUTES: {[s: string]: Attribute} = {
     ...COMMON_ATTRIBUTES,
+    activePowerReports: {
+        ID: 18,
+        dataType: UINT8,
+        min: 0,
+        max: 100,
+        description:
+      'Percent power level change that will result in a new power report being sent. 0 = Disabled',
+    },
+    periodicPowerAndEnergyReports: {
+        ID: 19,
+        min: 0,
+        max: 32767,
+        dataType: UINT16,
+        description:
+      'Time period between consecutive power & energy reports being sent (in seconds). The timer is reset after each report is sent.',
+    },
+    activeEnergyReports: {
+        ID: 20,
+        dataType: UINT16,
+        min: 0,
+        max: 32767,
+        description:
+      'Energy reports Energy level change which will result in sending a new energy report.' +
+      '0 = disabled, 1-32767 = 0.01kWh-327.67kWh. Default setting: 10 (0.1 kWh)',
+    },
     ledBarScaling: {
         ID: 100,
         dataType: BOOLEAN,
@@ -874,11 +874,9 @@ const tzLocal = {
                 },
             };
 
-            await entity.write('manuSpecificInovelli', payload, {
+            await entity.write('manuSpecificInovelliVZM31SN', payload, {
                 manufacturerCode: INOVELLI,
             });
-
-            meta.state[key] = value;
 
             return {
                 state: {
@@ -887,39 +885,17 @@ const tzLocal = {
             };
         },
         convertGet: async (entity, key, meta) => {
-            const value = await entity.read('manuSpecificInovelli', [key], {
+            await entity.read('manuSpecificInovelliVZM31SN', [key], {
                 manufacturerCode: INOVELLI,
             });
-
-            if (ATTRIBUTES[key].displayType === 'enum') {
-                const valueState = Object.keys(ATTRIBUTES[key].values).find(
-                    // @ts-expect-error
-                    (a) => ATTRIBUTES[key].values[a] === value[key],
-                );
-                meta.state[key] = valueState;
-            } else {
-                // @ts-expect-error
-                meta.state[key] = value[key];
-            }
         },
     }) as Tz.Converter,
     inovelli_parameters_readOnly: (ATTRIBUTES: {[s: string]: Attribute})=>({
         key: Object.keys(ATTRIBUTES).filter((a) => ATTRIBUTES[a].readOnly),
         convertGet: async (entity, key, meta) => {
-            const value = await entity.read('manuSpecificInovelli', [key], {
+            await entity.read('manuSpecificInovelliVZM31SN', [key], {
                 manufacturerCode: INOVELLI,
             });
-
-            if (ATTRIBUTES[key].displayType === 'enum') {
-                const valueState = Object.keys(ATTRIBUTES[key].values).find(
-                    // @ts-expect-error
-                    (a) => ATTRIBUTES[key].values[a] === value[key],
-                );
-                meta.state[key] = valueState;
-            } else {
-                // @ts-expect-error
-                meta.state[key] = value[key];
-            }
         },
         convertSet: undefined,
     }) as Tz.Converter,
@@ -927,7 +903,7 @@ const tzLocal = {
         key: ['led_effect'],
         convertSet: async (entity, key, values, meta) => {
             await entity.command(
-                'manuSpecificInovelli',
+                'manuSpecificInovelliVZM31SN',
                 'ledEffect',
                 {
                     // @ts-expect-error
@@ -948,7 +924,7 @@ const tzLocal = {
         key: ['individual_led_effect'],
         convertSet: async (entity, key, values, meta) => {
             await entity.command(
-                'manuSpecificInovelli',
+                'manuSpecificInovelliVZM31SN',
                 'individualLedEffect',
                 {
                     // @ts-expect-error
@@ -1092,7 +1068,7 @@ const tzLocal = {
                             utils.getOptions(meta.mapped, entity),
                         );
                         const defaultTransitionTime = await entity.read(
-                            'manuSpecificInovelli',
+                            'manuSpecificInovelliVZM31SN',
                             ['rampRateOffToOnRemote'],
                         );
                         return {
@@ -1148,7 +1124,7 @@ const tzLocal = {
                 );
 
                 const defaultTransitionTime = await entity.read(
-                    'manuSpecificInovelli',
+                    'manuSpecificInovelliVZM31SN',
                     ['rampRateOnToOffRemote'],
                 );
 
@@ -1185,7 +1161,6 @@ const tzLocal = {
                 },
                 utils.getOptions(meta.mapped, entity),
             );
-            meta.state[key] = value;
             return {
                 state: {
                     [key]: value,
@@ -1294,8 +1269,8 @@ const inovelliOnOffConvertSet = async (entity: Zh.Endpoint | Zh.Group, key: stri
 };
 
 const fzLocal = {
-    inovelli: {
-        cluster: 'manuSpecificInovelli',
+    inovelli: (ATTRIBUTES: {[s: string]: Attribute}) => ({
+        cluster: 'manuSpecificInovelliVZM31SN',
         type: ['raw', 'readResponse', 'commandQueryNextImageRequest'],
         convert: (model, msg, publish, options, meta) => {
             if (msg.type === 'raw' && msg.endpoint.ID == 2 && msg.data[4] === 0x00) {
@@ -1318,10 +1293,20 @@ const fzLocal = {
                 const action = clickLookup[msg.data[6]];
                 return {action: `${button}_${action}`};
             } else if (msg.type === 'readResponse') {
-                return msg.data;
+                return Object.keys(msg.data).reduce((p, c) => {
+                    if (ATTRIBUTES[c].displayType === 'enum') {
+                        return {
+                            ...p,
+                            [c]: Object.keys(ATTRIBUTES[c].values).find(
+                                (k) => ATTRIBUTES[c].values[k] === msg.data[c],
+                            ),
+                        };
+                    }
+                    return {...p, [c]: msg.data[c]};
+                }, {});
             }
         },
-    } as Fz.Converter,
+    }) as Fz.Converter,
     fan_mode: {
         cluster: 'genLevelCtrl',
         type: ['attributeReport', 'readResponse'],
@@ -1338,6 +1323,7 @@ const fzLocal = {
                     fan_mode: mode,
                 };
             }
+            return msg.data;
         },
     } as Fz.Converter,
     fan_state: {
@@ -1347,6 +1333,7 @@ const fzLocal = {
             if (msg.data.hasOwnProperty('onOff')) {
                 return {fan_state: msg.data['onOff'] === 1 ? 'ON' : 'OFF'};
             }
+            return msg.data;
         },
     } as Fz.Converter,
 };
@@ -1654,7 +1641,7 @@ const definitions: Definition[] = [
             fz.ignore_basic_report,
             fz.electrical_measurement,
             fz.metering,
-            fzLocal.inovelli,
+            fzLocal.inovelli(VZM31_ATTRIBUTES),
         ],
         ota: ota.inovelli,
         configure: async (device, coordinatorEndpoint, logger) => {
@@ -1670,7 +1657,7 @@ const definitions: Definition[] = [
             // Bind for Button Event Reporting
             const endpoint2 = device.getEndpoint(2);
             await reporting.bind(endpoint2, coordinatorEndpoint, [
-                'manuSpecificInovelli',
+                'manuSpecificInovelliVZM31SN',
             ]);
             await endpoint.read('haElectricalMeasurement', [
                 'acPowerMultiplier',
@@ -1694,7 +1681,7 @@ const definitions: Definition[] = [
         fromZigbee: [
             fzLocal.fan_state,
             fzLocal.fan_mode,
-            fzLocal.inovelli,
+            fzLocal.inovelli(VZM35_ATTRIBUTES),
         ],
         toZigbee: [
             tzLocal.fan_state,
@@ -1715,7 +1702,7 @@ const definitions: Definition[] = [
             // Bind for Button Event Reporting
             const endpoint2 = device.getEndpoint(2);
             await reporting.bind(endpoint2, coordinatorEndpoint, [
-                'manuSpecificInovelli',
+                'manuSpecificInovelliVZM31SN',
             ]);
         },
     },
